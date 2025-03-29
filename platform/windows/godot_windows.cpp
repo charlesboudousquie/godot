@@ -35,6 +35,8 @@
 #include <locale.h>
 #include <stdio.h>
 
+#include "../../main/cs599_thread_tracker.h"
+
 // For export templates, add a section; the exporter will patch it to enclose
 // the data appended to the executable (bundled PCK).
 #ifndef TOOLS_ENABLED
@@ -119,7 +121,11 @@ int _main() {
 		return 0;
 	}
 
+	beginTrackThreads();
+
 	result = widechar_main(argc, wc_argv);
+
+	endTrackThreads();
 
 	LocalFree(wc_argv);
 	return result;
