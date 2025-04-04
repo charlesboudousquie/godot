@@ -1,13 +1,18 @@
 extends Node3D
 
+var physics_recording_duration = 4
 var cube_size = 2
 var offset = 10
 @export var cube_side_count = 8
-var num_cubes = cube_side_count ** 3
+var num_objects = cube_side_count ** 3
 
 var objects = []
 var meshes = []
 var positions = []
+
+@onready var cs_599_profiler: CS599TimerSignal = $CS599TimerSignal
+
+@onready var timer: Timer = $Timer
 
 @onready var obj_shape = BoxShape3D.new()
 @onready var box_mesh = BoxMesh.new()
@@ -16,26 +21,21 @@ var positions = []
 # each other.
 func create_positions():
 	positions.clear()
-	print("num cubes is " + str(num_cubes))
+	print("num objects is " + str(num_objects))
 	
 	for x in cube_side_count:
 		for y in cube_side_count:
 			for z in cube_side_count:
 				var pos = (Vector3(x,y,z) * cube_size) + Vector3(offset, offset, offset)
 				positions.append(pos)
-			
-	#print("positions size is " + str(positions.size()))
-	#for pos in positions:
-		#print(pos)
 
-# Called when the node enters the scene tree for the first time.
-func _ready() -> void:
+func createCubes():
 	var ps = PhysicsServer3D
 	var rs = RenderingServer
 	
 	create_positions()
 	
-	for index in num_cubes:
+	for index in num_objects:
 		var object = ps.body_create()
 		ps.body_set_space(object, get_world_3d().space)
 		#print(obj_shape.size)
@@ -57,10 +57,26 @@ func _ready() -> void:
 		rs.instance_set_transform(mesh, trans)
 		meshes.append(mesh)
 		objects.append(object)
-		
+
+# Called when the node enters the scene tree for the first time.
+func _ready() -> void:
+	createCubes()
+	timer.wait_time = physics_recording_duration
+	timer.start()
+	cs_599_profiler.startRecording()
+	
+# when timer is finished spawn next set of objects for collision
+func _on_timer_timeout() -> void:
+	cs_599_profiler.endRecording()
+	clearObjects()
+	cube_side_count += 1
+	num_objects = cube_side_count ** 3
+	createCubes()
+	timer.start()
+	cs_599_profiler.startRecording()
 
 func _physics_process(_delta: float) -> void:
-	for index in num_cubes:
+	for index in num_objects:
 		var object = objects[index]
 		var mesh = meshes[index]
 		var trans = PhysicsServer3D.body_get_state(object, PhysicsServer3D.BODY_STATE_TRANSFORM)
@@ -72,18 +88,22 @@ func _input(event):
 	if event.is_action_pressed("reload_scene"):
 		get_tree().reload_current_scene()
 
+func clearObjects():
+	if !objects.is_empty():
+		for index in num_objects:
+			var object = objects[index]
+			var mesh = meshes[index]
+			# remove rigid bodies
+			if object:
+				PhysicsServer3D.free_rid(object)
+				
+			# clean up meshes
+			if mesh:
+				RenderingServer.free_rid(mesh)
+		
+		meshes.clear()
+		objects.clear()
+		positions.clear()
+
 func _exit_tree() -> void:
-	for index in num_cubes:
-		var object = objects[index]
-		var mesh = meshes[index]
-		# remove rigid bodies
-		if object:
-			PhysicsServer3D.free_rid(object)
-			
-		# clean up meshes
-		if mesh:
-			RenderingServer.free_rid(mesh)
-	
-	meshes.clear()
-	objects.clear()
-	positions.clear()
+	clearObjects()

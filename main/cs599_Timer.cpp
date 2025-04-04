@@ -1,20 +1,13 @@
 
 
-#include "cs599_thread_tracker.h"
+#include "cs599_Timer.h"
 
 #include "editor/editor_node.h"
 #include "editor/editor_log.h"
 
 CS599_Timer::TimePointType CS599_Timer::start;
 CS599_Timer::TimePointType CS599_Timer::end;
-
-void beginTrackThreads() {
-
-}
-
-void endTrackThreads() {
-
-}
+bool CS599_Timer::isActive = false;
 
 //void CS599_Timer::printToEditorConsole() {
 //	std::string message = std::to_string(getTime().count());

@@ -14,11 +14,13 @@ public:
 	static TimePointType start;
 	static TimePointType end;
 
-	static void startTimer() {
+	static bool isActive;
+
+	static void startStepRecording() {
 		start = ClockType::now();
 	}
 
-	static void endTimer() {
+	static void endStepRecording() {
 		end = ClockType::now();
 	}
 
@@ -30,9 +32,4 @@ public:
 		return getTime().count();
 	}
 
-	//static void printToEditorConsole();
 };
-
-void beginTrackThreads();
-
-void endTrackThreads();
