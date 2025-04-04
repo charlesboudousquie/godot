@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b81tlr8fg3y2c"
-path.s3tc="res://.godot/imported/rocky_trail_nor_gl_1k.png-8be089592c2d81f1e8bbde6a4d944b7f.s3tc.ctex"
+uid="uid://bxdc8m8lordky"
+path.s3tc="res://.godot/imported/red_brick_nor_gl_1k.png-e87680c614e4fa3306a6247defdfb179.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://textures/rocky_trail_nor_gl_1k.png"
-dest_files=["res://.godot/imported/rocky_trail_nor_gl_1k.png-8be089592c2d81f1e8bbde6a4d944b7f.s3tc.ctex"]
+source_file="res://textures/red_brick_nor_gl_1k.png"
+dest_files=["res://.godot/imported/red_brick_nor_gl_1k.png-e87680c614e4fa3306a6247defdfb179.s3tc.ctex"]
 
 [params]
 
@@ -25,7 +25,7 @@ compress/channel_pack=0
 mipmaps/generate=true
 mipmaps/limit=-1
 roughness/mode=1
-roughness/src_normal="res://textures/rocky_trail_nor_gl_1k.png"
+roughness/src_normal="res://textures/red_brick_nor_gl_1k.png"
 process/fix_alpha_border=true
 process/premult_alpha=false
 process/normal_map_invert_y=false

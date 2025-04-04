@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://flipk38km0a6"
-path.s3tc="res://.godot/imported/rocky_trail_rough_1k.png-4085901bb5adf597ab0727773ad27046.s3tc.ctex"
+uid="uid://bf4eq3p6k4dxu"
+path.s3tc="res://.godot/imported/red_brick_diff_1k.png-9632c9c45d4fa163cfab37d7df83753d.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://textures/rocky_trail_rough_1k.png"
-dest_files=["res://.godot/imported/rocky_trail_rough_1k.png-4085901bb5adf597ab0727773ad27046.s3tc.ctex"]
+source_file="res://textures/red_brick_diff_1k.png"
+dest_files=["res://.godot/imported/red_brick_diff_1k.png-9632c9c45d4fa163cfab37d7df83753d.s3tc.ctex"]
 
 [params]
 
