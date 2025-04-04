@@ -140,6 +140,9 @@
 #endif // TOOLS_ENABLED && !GDSCRIPT_NO_LSP
 #endif // MODULE_GDSCRIPT_ENABLED
 
+// thread tracker include
+#include "cs599_thread_tracker.h"
+
 /* Static members */
 
 // Singletons
@@ -4613,7 +4616,25 @@ bool Main::iteration() {
 
 #ifndef PHYSICS_3D_DISABLED
 		PhysicsServer3D::get_singleton()->end_sync();
-		PhysicsServer3D::get_singleton()->step(physics_step * time_scale);
+
+        bool isPlayingGame = !Engine::get_singleton()->is_editor_hint();
+
+      /*  if (Engine::get_singleton()) {
+			CS599_Timer::startTimer();
+        }*/
+
+        if (isPlayingGame) {
+		    CS599_Timer::startTimer();
+        }
+
+        PhysicsServer3D::get_singleton()->step(physics_step * time_scale);
+
+        if (isPlayingGame) {
+			CS599_Timer::endTimer();
+			String count = itos(CS599_Timer::getTimeCount());
+			print_line(count);
+			//CS599_Timer::printToEditorConsole();
+		}
 #endif // PHYSICS_3D_DISABLED
 
 #ifndef PHYSICS_2D_DISABLED

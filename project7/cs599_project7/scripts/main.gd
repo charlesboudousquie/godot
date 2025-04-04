@@ -2,7 +2,7 @@ extends Node3D
 
 var cube_size = 2
 var offset = 10
-var cube_side_count = 8
+@export var cube_side_count = 8
 var num_cubes = cube_side_count ** 3
 
 var objects = []
@@ -47,7 +47,7 @@ func _ready() -> void:
 		# object will be a part of collision layer 1
 		# and will collide with other objects in layer 1
 		ps.body_set_collision_layer(object, 1)
-		ps.area_set_collision_mask(object, 1)
+		ps.body_set_collision_mask(object, 1)
 		
 		ps.body_set_shape_transform(object, 0, Transform3D.IDENTITY)
 		var pos = positions[index] + Vector3(0,5,0)
@@ -59,7 +59,7 @@ func _ready() -> void:
 		objects.append(object)
 		
 
-func _physics_process(delta: float) -> void:
+func _physics_process(_delta: float) -> void:
 	for index in num_cubes:
 		var object = objects[index]
 		var mesh = meshes[index]
@@ -69,6 +69,8 @@ func _physics_process(delta: float) -> void:
 func _input(event):
 	if event.is_action_pressed("ui_cancel"):
 		get_tree().quit()
+	if event.is_action_pressed("reload_scene"):
+		get_tree().reload_current_scene()
 
 func _exit_tree() -> void:
 	for index in num_cubes:

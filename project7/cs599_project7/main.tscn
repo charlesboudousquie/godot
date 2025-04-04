@@ -1,10 +1,23 @@
-[gd_scene load_steps=7 format=3 uid="uid://cwnkmo1yt6sda"]
+[gd_scene load_steps=10 format=3 uid="uid://cwnkmo1yt6sda"]
 
 [ext_resource type="Script" uid="uid://t5qsjujw1bnp" path="res://scripts/main.gd" id="1_ig7tw"]
 [ext_resource type="Script" uid="uid://d21hgtpa1sq8p" path="res://scripts/cam_view.gd" id="2_0xm2m"]
 [ext_resource type="Texture2D" uid="uid://bf4eq3p6k4dxu" path="res://textures/red_brick_diff_1k.png" id="2_lquwl"]
 [ext_resource type="Texture2D" uid="uid://bxdc8m8lordky" path="res://textures/red_brick_nor_gl_1k.png" id="3_7mycd"]
 [ext_resource type="Texture2D" uid="uid://dkyyfjjyyf4ja" path="res://textures/red_brick_rough_1k.png" id="4_272bh"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_lquwl"]
+sky_horizon_color = Color(0.662243, 0.671743, 0.686743, 1)
+ground_horizon_color = Color(0.662243, 0.671743, 0.686743, 1)
+
+[sub_resource type="Sky" id="Sky_7mycd"]
+sky_material = SubResource("ProceduralSkyMaterial_lquwl")
+
+[sub_resource type="Environment" id="Environment_272bh"]
+background_mode = 2
+sky = SubResource("Sky_7mycd")
+tonemap_mode = 2
+glow_enabled = true
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_lquwl"]
 albedo_texture = ExtResource("2_lquwl")
@@ -14,6 +27,9 @@ normal_texture = ExtResource("3_7mycd")
 
 [node name="world" type="Node3D"]
 script = ExtResource("1_ig7tw")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_272bh")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.522236, -0.829788, 0.196779, 0.131671, 0.306434, 0.942741, -0.842575, -0.466424, 0.26929, 0, 4.78814, 0)
