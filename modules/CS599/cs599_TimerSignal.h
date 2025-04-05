@@ -10,8 +10,10 @@ protected:
 
 public:
 	// recording for differing number of cubes
-	void startRecording();
+	void clearRecords();
+	void startRecording(String message);
 	void endRecording();
+	void saveToCSV();
 
 	CS599TimerSignal() {}
 };

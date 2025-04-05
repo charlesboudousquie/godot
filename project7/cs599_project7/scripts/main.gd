@@ -63,7 +63,8 @@ func _ready() -> void:
 	createCubes()
 	timer.wait_time = physics_recording_duration
 	timer.start()
-	cs_599_profiler.startRecording()
+	cs_599_profiler.clearRecords()
+	cs_599_profiler.startRecording("num objects " + str(num_objects))
 	
 # when timer is finished spawn next set of objects for collision
 func _on_timer_timeout() -> void:
@@ -73,7 +74,7 @@ func _on_timer_timeout() -> void:
 	num_objects = cube_side_count ** 3
 	createCubes()
 	timer.start()
-	cs_599_profiler.startRecording()
+	cs_599_profiler.startRecording("num objects " + str(num_objects))
 
 func _physics_process(_delta: float) -> void:
 	for index in num_objects:
@@ -84,7 +85,10 @@ func _physics_process(_delta: float) -> void:
 
 func _input(event):
 	if event.is_action_pressed("ui_cancel"):
+		print("ending play")
+		cs_599_profiler.saveToCSV()
 		get_tree().quit()
+		
 	if event.is_action_pressed("reload_scene"):
 		get_tree().reload_current_scene()
 
@@ -105,5 +109,6 @@ func clearObjects():
 		objects.clear()
 		positions.clear()
 
-func _exit_tree() -> void:
-	clearObjects()
+#func _exit_tree() -> void:
+	#clearObjects()
+	#cs_599_profiler.saveToCSV()
