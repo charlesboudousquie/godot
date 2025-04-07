@@ -9,6 +9,7 @@ protected:
 	static void _bind_methods();
 
 public:
+
 	// recording for differing number of cubes
 	void clearRecords();
 	void startRecording(String message);

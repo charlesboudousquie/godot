@@ -13,14 +13,20 @@ public:
 	using TimePointType = ClockType::time_point;
 	using TimeType = std::chrono::milliseconds;
 
+	// Start time before timing a block of code for a particular frame.
 	static TimePointType start;
+	// End time after timing a block of code.
 	static TimePointType end;
 
 	static std::map<std::string, std::vector<long long>> recordings;
 
 	static bool isActive;
 
+	// 
 	static std::string currentRecording;
+
+	// Name of file to save to.
+	//static std::string fileName;
 
 	static void clear() {
 		recordings = {};
@@ -48,5 +54,7 @@ public:
 	static long long getTimeCount() {
 		return getTime().count();
 	}
+
+	static void saveToCSV(const std::string& fileName);
 
 };

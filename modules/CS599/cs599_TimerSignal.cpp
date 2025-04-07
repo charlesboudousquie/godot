@@ -2,7 +2,16 @@
 
 #include "cs599_Timer.h"
 
+#include "servers/physics_server_3d.h"
+
+#include "core/config/project_settings.h"
+
 #include <fstream>
+
+//#include "editor/editor_node.h"
+//#include "editor/editor_log.h"
+//	std::string message = std::to_string(getTime().count());
+//	EditorNode::get_singleton()->get_log()->add_message(message.c_str());
 
 void CS599TimerSignal::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("startRecording"), &CS599TimerSignal::startRecording);
@@ -33,60 +42,15 @@ void CS599TimerSignal::endRecording() {
 void CS599TimerSignal::saveToCSV() {
 	print_line("saving time step recordings to file");
 
-	// todo: figure out sorting of column names.
-	std::vector<std::string> columnNames;
+	// Get the physics manager that works
+	auto manager = PhysicsServer3DManager::get_singleton();
+	auto serverId = manager->find_server_id(GLOBAL_GET(PhysicsServer3DManager::setting_property_name));
+	auto serverName = manager->get_server_name(serverId);
+	print_line(vformat("server is: %s", serverName));
 
-	for (const auto& recording : CS599_Timer::recordings) {
-		columnNames.push_back(recording.first);
-	}
-
-	std::sort(columnNames.begin(), columnNames.end());
-
-	std::ofstream csvFile("timer_recordings.csv");
-	const int columns = columnNames.size();
-
-	size_t maxRecordings = 0;
-
-	for (const auto &recording : CS599_Timer::recordings) {
-		maxRecordings = std::max(maxRecordings, recording.second.size());
-	}
-
-	// create column headers
-	for (int i = 0; i < columns; i++) {
-		print_line(columnNames[i].c_str());
-		csvFile << columnNames[i];
-		if (i < columns - 1) {
-			csvFile << ", ";
-		}
-	}
-	csvFile << "\n";
-
-
-	print_line(vformat("max recordings: %d", maxRecordings));
-	// for each row
-	for (int row = 0; row < maxRecordings; row++) {
-		// create row
-		for (int col = 0; col < columns; col++) {
-			const auto &columnName = columnNames[col];
-			const auto &data = CS599_Timer::recordings.at(columnName);
-			// If there is a value to record(not all recordings are of same length)
-			if (data.size() > row) {
-				csvFile << data[row];
-				if (col < columns - 1) {
-					csvFile << ", ";
-				}
-			} else {
-				// its a blank
-				csvFile << ", ";
-			}
-		}
-
-		csvFile << "\n";
-	}
-
-	csvFile.close();
-
-	if (csvFile.fail()) {
-		print_line("csv failed!");
+	if (serverName == "Joly Physics") {
+		CS599_Timer::saveToCSV("jolt_physics_timer_recordings");
+	} else {
+		CS599_Timer::saveToCSV("default_physics_timer_recordings");
 	}
 }
