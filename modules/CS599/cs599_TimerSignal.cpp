@@ -1,6 +1,6 @@
 #include "cs599_TimerSignal.h"
 
-#include "main/cs599_Timer.h"
+#include "cs599_Timer.h"
 
 #include <fstream>
 

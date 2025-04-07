@@ -140,8 +140,8 @@
 #endif // TOOLS_ENABLED && !GDSCRIPT_NO_LSP
 #endif // MODULE_GDSCRIPT_ENABLED
 
-// thread tracker include
-#include "cs599_Timer.h"
+// timer include
+#include "modules/CS599/cs599_Timer.h"
 
 /* Static members */
 

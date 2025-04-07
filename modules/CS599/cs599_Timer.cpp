@@ -12,7 +12,5 @@ bool CS599_Timer::isActive = false;
 std::map<std::string, std::vector<long long>> CS599_Timer::recordings;
 std::string CS599_Timer::currentRecording;
 
-//void CS599_Timer::printToEditorConsole() {
 //	std::string message = std::to_string(getTime().count());
 //	EditorNode::get_singleton()->get_log()->add_message(message.c_str());
-//}
