@@ -11,11 +11,23 @@ var meshes = []
 var positions = []
 
 @onready var cs_599_profiler: CS599TimerSignal = $CS599TimerSignal
-
 @onready var timer: Timer = $Timer
 
-@onready var obj_shape = BoxShape3D.new()
-@onready var box_mesh = BoxMesh.new()
+@onready var boxMesh = BoxMesh.new()
+@onready var sphereMesh = SphereMesh.new()
+
+@onready var boxShape = BoxShape3D.new()
+@onready var sphereShape = SphereShape3D.new()
+
+# various controls for simulation
+@export var use_sphere = false
+@export var should_increment_count = true
+@export var should_respawn_objects = true
+
+@export var absorbent = false
+@export var bounciness = 0.0
+@export var friction = 1.0
+@export var isRough = false
 
 # create a cube of cubes equally spaced from
 # each other.
@@ -29,16 +41,25 @@ func create_positions():
 				var pos = (Vector3(x,y,z) * cube_size) + Vector3(offset, offset, offset)
 				positions.append(pos)
 
-func createCubes():
+func createObjects():
 	var ps = PhysicsServer3D
 	var rs = RenderingServer
+	
+	var obj_shape
+	var obj_mesh
+	
+	if use_sphere:
+		obj_shape = sphereShape
+		obj_mesh = sphereMesh
+	else:
+		obj_shape = boxShape
+		obj_mesh = boxMesh
 	
 	create_positions()
 	
 	for index in num_objects:
 		var object = ps.body_create()
 		ps.body_set_space(object, get_world_3d().space)
-		#print(obj_shape.size)
 		ps.body_add_shape(object, obj_shape)
 		
 		# set body mode to rigid so it actually collides.
@@ -53,14 +74,19 @@ func createCubes():
 		var pos = positions[index] + Vector3(0,5,0)
 		var trans = Transform3D(Basis.IDENTITY, pos)
 		ps.body_set_state(object, PhysicsServer3D.BODY_STATE_TRANSFORM, trans)
-		var mesh = rs.instance_create2(box_mesh, get_world_3d().scenario)
+		
+		# physics properties
+		#ps.body_set
+		ps.body_set_param(object, PhysicsServer3D.BODY_PARAM_BOUNCE, 1)
+		
+		var mesh = rs.instance_create2(obj_mesh, get_world_3d().scenario)
 		rs.instance_set_transform(mesh, trans)
 		meshes.append(mesh)
 		objects.append(object)
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
-	createCubes()
+	createObjects()
 	timer.wait_time = physics_recording_duration
 	timer.start()
 	cs_599_profiler.clearRecords()
@@ -68,13 +94,15 @@ func _ready() -> void:
 	
 # when timer is finished spawn next set of objects for collision
 func _on_timer_timeout() -> void:
-	cs_599_profiler.endRecording()
-	clearObjects()
-	cube_side_count += 1
-	num_objects = cube_side_count ** 3
-	createCubes()
-	timer.start()
-	cs_599_profiler.startRecording("num objects " + str(num_objects))
+	if should_respawn_objects:
+		cs_599_profiler.endRecording()
+		clearObjects()
+		if should_increment_count:
+			cube_side_count += 1
+		num_objects = cube_side_count ** 3
+		createObjects()
+		timer.start()
+		cs_599_profiler.startRecording("num objects " + str(num_objects))
 
 func _physics_process(_delta: float) -> void:
 	for index in num_objects:
@@ -86,7 +114,14 @@ func _physics_process(_delta: float) -> void:
 func _input(event):
 	if event.is_action_pressed("ui_cancel"):
 		print("ending play")
+		
+		if use_sphere:
+			cs_599_profiler.setFileSuffix("_spheres")
+		else:
+			cs_599_profiler.setFileSuffix("_cubes")
+		
 		cs_599_profiler.saveToCSV()
+		cs_599_profiler.clearRecords()
 		get_tree().quit()
 		
 	if event.is_action_pressed("reload_scene"):
@@ -108,7 +143,3 @@ func clearObjects():
 		meshes.clear()
 		objects.clear()
 		positions.clear()
-
-#func _exit_tree() -> void:
-	#clearObjects()
-	#cs_599_profiler.saveToCSV()

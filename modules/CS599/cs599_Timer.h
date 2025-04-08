@@ -18,20 +18,22 @@ public:
 	// End time after timing a block of code.
 	static TimePointType end;
 
-	static std::map<std::string, std::vector<long long>> recordings;
-
 	static bool isActive;
 
-	// 
-	static std::string currentRecording;
+	// A mapping of sessions to their recorded timings.
+	static std::map<std::string, std::vector<long long>> recordings;
 
-	// Name of file to save to.
-	//static std::string fileName;
+	// Name of current recording session
+	static std::string currentSession;
+
+	// Suffix to append to file when saving to disk
+	static std::string fileSuffix;
 
 	static void clear() {
-		recordings = {};
-		currentRecording = {};
 		isActive = false;
+		recordings = {};
+		currentSession = {};
+		fileSuffix = {};
 	}
 
 	static void startStepRecording() {
@@ -44,7 +46,7 @@ public:
 	}
 
 	static void saveRecording() {
-		recordings[currentRecording].push_back(getTimeCount());
+		recordings[currentSession].push_back(getTimeCount());
 	}
 
 	static auto getTime() {
@@ -55,6 +57,6 @@ public:
 		return getTime().count();
 	}
 
-	static void saveToCSV(const std::string& fileName);
+	static bool saveToCSV(const std::string& fileName);
 
 };

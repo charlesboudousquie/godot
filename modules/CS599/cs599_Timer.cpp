@@ -4,15 +4,19 @@
 
 #include <fstream>
 #include <algorithm>
+#include <filesystem>
+
+namespace fs = std::filesystem;
 
 CS599_Timer::TimePointType CS599_Timer::start;
 CS599_Timer::TimePointType CS599_Timer::end;
 bool CS599_Timer::isActive = false;
 
 std::map<std::string, std::vector<long long>> CS599_Timer::recordings;
-std::string CS599_Timer::currentRecording;
+std::string CS599_Timer::currentSession;
+std::string CS599_Timer::fileSuffix;
 
-void CS599_Timer::saveToCSV(const std::string &fileName) {
+bool CS599_Timer::saveToCSV(const std::string &fileName) {
 
 	// todo: figure out sorting of column names.
 	std::vector<std::string> columnNames;
@@ -23,7 +27,13 @@ void CS599_Timer::saveToCSV(const std::string &fileName) {
 
 	std::sort(columnNames.begin(), columnNames.end());
 
-	std::ofstream csvFile("timer_recordings.csv");
+	if (!fs::exists("recordings")) {
+		fs::create_directory("recordings");
+	}
+
+	std::string path = "recordings/" + fileName + fileSuffix + ".csv";
+
+	std::ofstream csvFile(path);
 	const int columns = columnNames.size();
 
 	size_t maxRecordings = 0;
@@ -66,8 +76,5 @@ void CS599_Timer::saveToCSV(const std::string &fileName) {
 
 	csvFile.close();
 
-	if (csvFile.fail()) {
-		throw std::runtime_error("Could not close csvfile!");
-		//print_line("csv failed!");
-	}
+	return !csvFile.fail();
 }

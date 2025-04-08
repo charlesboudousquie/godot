@@ -18,6 +18,7 @@ void CS599TimerSignal::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("endRecording"), &CS599TimerSignal::endRecording);
 	ClassDB::bind_method(D_METHOD("saveToCSV"), &CS599TimerSignal::saveToCSV);
 	ClassDB::bind_method(D_METHOD("clearRecords"), &CS599TimerSignal::clearRecords);
+	ClassDB::bind_method(D_METHOD("setFileSuffix"), &CS599TimerSignal::setFileSuffix);
 }
 
 void CS599TimerSignal::clearRecords() {
@@ -26,16 +27,12 @@ void CS599TimerSignal::clearRecords() {
 
 void CS599TimerSignal::startRecording(String message) {
 	print_line("beginning recording");
-	CS599_Timer::currentRecording = message.utf8().get_data();
-	/*auto debugMessage = "currently recording for: " + CS599_Timer::currentRecording;
-	print_line(debugMessage.c_str());*/
+	CS599_Timer::currentSession = message.utf8().get_data();
 	CS599_Timer::isActive = true;
 }
 
 void CS599TimerSignal::endRecording() {
 	print_line("ending recording");
-	/*auto debugMessage = "ending recording for: " + CS599_Timer::currentRecording;
-	print_line(debugMessage.c_str());*/
 	CS599_Timer::isActive = false;
 }
 
@@ -48,9 +45,15 @@ void CS599TimerSignal::saveToCSV() {
 	auto serverName = manager->get_server_name(serverId);
 	print_line(vformat("server is: %s", serverName));
 
-	if (serverName == "Joly Physics") {
-		CS599_Timer::saveToCSV("jolt_physics_timer_recordings");
+	bool result;
+
+	if (serverName == "Jolt Physics") {
+		result = CS599_Timer::saveToCSV("jolt_physics_timer_recordings");
 	} else {
-		CS599_Timer::saveToCSV("default_physics_timer_recordings");
+		result = CS599_Timer::saveToCSV("default_physics_timer_recordings");
+	}
+
+	if (!result) {
+		print_line("csv failed!");
 	}
 }
