@@ -15,44 +15,62 @@ function print(message){
 let sortedColumns = []
 
 // Add svg anchor to page
-var svg = d3.select("#my_dataviz")
+var svg = d3.select("#chart-container")
     .append('svg')
-        .attr('width', graphWidth)
-        .attr('height', graphHeight)
+        .attr('width', width)
+        .attr('height', height)
     .append('g')
-        .attr('transform', `translate(margins.top, margins.left)`);
+        .attr('transform', `translate(${margins.left}, ${margins.top})`);
 
 function render(data) {
 
     // for now maximum is for one column
     print(data)
     print(data[0])
+
+    print(`graph height ${graphHeight}`)
+    print(`graph width ${graphWidth}`)
     
-    const xMax = domain.length;
+    const xMax = data.length;
     print(`max x is ${xMax}`)
     
     // create x axis aka ticks
-    const x = d3.scaleLinear()
-    .domain([0, domain.length])
+    const xScaling = d3.scaleLinear()
+    .domain([0, xMax])
     .range([0, graphWidth])
-    
     
     // append x axis
     svg.append('g')
-    .attr('transform', `translate(0, ${graphHeight})`)
-    .call(d3.axisBottom(x).ticks(40))
-    
+        .attr('transform', `translate(0, ${graphHeight})`)
+        .call(d3.axisBottom(xScaling).ticks(40))
+
     
     const yMax = d3.max(data, row => Math.max(...row))
     print(`max y is ${yMax}`)
     
     // create y axis aka milliseconds
-    const y = d3.scaleLinear()
+    const yScaling = d3.scaleLinear()
         .domain([0, yMax])
         .range([graphHeight, 0])
 
     svg.append('g')
-        .call(d3.axisLeft(y));
+        .call(d3.axisLeft(yScaling));
+
+    
+    const lineGenerator = d3.line()
+    .x(function(d, index) { 
+        // print(`for x, d[0] is ${d[0]}`)
+        return xScaling(index)})
+    .y(function(d) { 
+        // print(`for y, d[0] is ${d[0]}`)
+        return yScaling(d[0])})
+
+    svg.append('path')
+        .datum(data)
+        .attr('fill', 'none')
+        .attr('stroke', 'steelblue')
+        .attr('stroke-width', 1.5)
+        .attr('d', lineGenerator)
 }
 
 function getSortedColumnNames(data) {
@@ -62,8 +80,8 @@ function getSortedColumnNames(data) {
      // sort by numerical order
      // sorting strings like: "num objects 729"
      columns.sort(function(first, second){
-         print(`first is ${first}`)
-         print(`second is ${second}`)
+        //  print(`first is ${first}`)
+        //  print(`second is ${second}`)
  
          // match() returns an array containing, the string, the index, the input, and the length of the matches found. We only need index 0.
  
@@ -71,44 +89,35 @@ function getSortedColumnNames(data) {
          var secondCounter = +second.match(/\d+/)[0];
          return firstCounter - secondCounter;
      });
-
-    //  columns.forEach((column, index, array) => {
-    //     array[index] = column.match(/\d+/)[0];
-    //  })
  
      print(`columns are ${columns}`)
      
      sortedColumns = columns
-    //  columns.forEach(column => {
-    //      sortedColumns.push(toString(column));
-    //  })
  
      print(`sorted columns are ${sortedColumns}`)
 }
-
-// max: 33
 
 // default_physics_timer_recordings_cubes.csv
 d3.csv('default_physics_timer_recordings_cubes.csv')
 .then(data => {
     getSortedColumnNames(data);
 
-        print(`data length ${data.length}`)
-        print(`sorted columns before loop ${sortedColumns}`)
+        // print(`data length ${data.length}`)
+        // print(`sorted columns before loop ${sortedColumns}`)
          for (var i = 0; i < data.length; i++) {
             const oldRow = data[i];
-            print('old row is')
-            print(oldRow)
+            // print('old row is')
+            // print(oldRow)
             let newRow = []
             sortedColumns.forEach(col => {
-                print(typeof col)
+                // print(typeof col)
                  newRow.push(+oldRow[col]);
             });
 
             data[i] = newRow;
-            print(`new row is`)
-            print(newRow)
-            print(`data[i] is: ${data[i]}`)
+            // print(`new row is`)
+            // print(newRow)
+            // print(`data[i] is: ${data[i]}`)
          }
         
          render(data);
