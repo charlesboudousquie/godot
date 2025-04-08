@@ -18,14 +18,13 @@ std::string CS599_Timer::fileSuffix;
 
 bool CS599_Timer::saveToCSV(const std::string &fileName) {
 
-	// todo: figure out sorting of column names.
 	std::vector<std::string> columnNames;
 
 	for (const auto &recording : CS599_Timer::recordings) {
 		columnNames.push_back(recording.first);
 	}
 
-	std::sort(columnNames.begin(), columnNames.end());
+	//std::sort(columnNames.begin(), columnNames.end());
 
 	if (!fs::exists("recordings")) {
 		fs::create_directory("recordings");

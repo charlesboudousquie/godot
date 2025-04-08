@@ -4,7 +4,9 @@ var physics_recording_duration = 4
 var cube_size = 2
 var offset = 10
 @export var cube_side_count = 8
+@export var max_side_count = 11
 var num_objects = cube_side_count ** 3
+
 
 var objects = []
 var meshes = []
@@ -23,11 +25,6 @@ var positions = []
 @export var use_sphere = false
 @export var should_increment_count = true
 @export var should_respawn_objects = true
-
-@export var absorbent = false
-@export var bounciness = 0.0
-@export var friction = 1.0
-@export var isRough = false
 
 # create a cube of cubes equally spaced from
 # each other.
@@ -99,6 +96,12 @@ func _on_timer_timeout() -> void:
 		clearObjects()
 		if should_increment_count:
 			cube_side_count += 1
+		
+		if cube_side_count > max_side_count:
+			print("cube side count max reached: ", cube_side_count)
+			endPlay();
+			return
+		
 		num_objects = cube_side_count ** 3
 		createObjects()
 		timer.start()
@@ -111,20 +114,23 @@ func _physics_process(_delta: float) -> void:
 		var trans = PhysicsServer3D.body_get_state(object, PhysicsServer3D.BODY_STATE_TRANSFORM)
 		RenderingServer.instance_set_transform(mesh, trans)
 
+func endPlay():
+	print("ending play")
+		
+	if use_sphere:
+		cs_599_profiler.setFileSuffix("_spheres")
+	else:
+		cs_599_profiler.setFileSuffix("_cubes")
+	
+	cs_599_profiler.saveToCSV()
+	cs_599_profiler.clearRecords()
+	get_tree().quit()
+
 func _input(event):
 	if event.is_action_pressed("ui_cancel"):
-		print("ending play")
-		
-		if use_sphere:
-			cs_599_profiler.setFileSuffix("_spheres")
-		else:
-			cs_599_profiler.setFileSuffix("_cubes")
-		
-		cs_599_profiler.saveToCSV()
+		endPlay()
+	elif event.is_action_pressed("reload_scene"):
 		cs_599_profiler.clearRecords()
-		get_tree().quit()
-		
-	if event.is_action_pressed("reload_scene"):
 		get_tree().reload_current_scene()
 
 func clearObjects():
@@ -143,3 +149,9 @@ func clearObjects():
 		meshes.clear()
 		objects.clear()
 		positions.clear()
+
+
+#@export var absorbent = false
+#@export var bounciness = 0.0
+#@export var friction = 1.0
+#@export var isRough = false
