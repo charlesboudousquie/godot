@@ -1,16 +1,16 @@
 const margins ={
-    top: 30, right: 30, bottom: 30, left: 40
+    top: 30, right: 30, bottom: 60, left: 80
 };
 
 const width = 900;
 const height = 600;
+const tickCount = 20;
 
 const graphWidth = width - margins.right - margins.left;
 const graphHeight = height - margins.top - margins.bottom;
 
-function print(message){
-    console.log(message);
-}
+
+let g_columnIndex = 0;
 
 let sortedColumns = []
 
@@ -22,17 +22,85 @@ var svg = d3.select("#chart-container")
     .append('g')
         .attr('transform', `translate(${margins.left}, ${margins.top})`);
 
+function print(message){
+    console.log(message);
+}
+
+function addYAxisLabel(group, innerHeight, label) {
+    group.append('text')
+    .attr('class', 'axis-label')
+          .attr('x',  -innerHeight / 4)
+          .attr('y', -45)
+          .attr("font-size","34px")
+          .attr('fill', 'gray')
+          .attr('transform', 'rotate(-90)')
+          .text(label);
+  }
+  
+  function addXAxisLabel(group, innerWidth, label) {
+    group.append('text')
+          .attr('class', 'axis-label')
+          .attr('y', 45)
+          .attr('x', innerWidth / 2)
+          .attr('fill', 'gray')
+          .attr("font-size","34px")
+          .text(label);
+  }
+
+// tooltip code if from https://www.youtube.com/watch?v=uyPYxx-WGxc&list=PLdJuTVexUXU1CW9IduXFtS2vjQcDAOgz7&index=3
+
+function createCircleTooltip() {
+    return svg.append('circle')
+    .attr('r', 0)
+    .attr('fill', 'steelblue')
+    .attr('stroke', 'white')
+    .attr('opacity', .7)
+    .style('pointer-events', 'none');
+}
+
+function createListenerRectangle(data, xScaling, yScaling) {
+    const listenerRectangle = svg.append('rect')
+    .attr('width', width)
+    .attr('height', height);
+
+    listenerRectangle.on("mousemove", function (event) {
+        // Get mouse x and y
+        const [mouseX, mouseY] = d3.pointer(event);
+        // Translate from pixel range to domain range(physics ticks)
+        const tickValue = xScaling.invert(mouseX);
+        // bisector will take a row of data and return the appropriate datum
+        // depending on which graph is currently selected.
+        // .center means choose the index that would be closest to us.
+        const bisector = d3.bisector((d) => d[g_columnIndex]).center
+        const closestIndex = bisector(data, tickValue);
+        // get milliseconds
+        const datum = data[closestIndex][g_columnIndex];
+
+        const newX= xScaling(closestIndex);
+        const newY = yScaling(datum);
+       
+        tooltip.attr('transform', `translate(${newX}, ${newY})`);
+        tooltip.selectAll('text')
+            .data([,])
+            .join('text')
+            
+
+    });
+
+    return listenerRectangle;
+}
+
 function render(data) {
 
     // for now maximum is for one column
     print(data)
     print(data[0])
 
-    print(`graph height ${graphHeight}`)
-    print(`graph width ${graphWidth}`)
+    // print(`graph height ${graphHeight}`)
+    // print(`graph width ${graphWidth}`)
     
     const xMax = data.length;
-    print(`max x is ${xMax}`)
+    // print(`max x is ${xMax}`)
     
     // create x axis aka ticks
     const xScaling = d3.scaleLinear()
@@ -40,9 +108,10 @@ function render(data) {
     .range([0, graphWidth])
     
     // append x axis
-    svg.append('g')
+    let xAxisGroup = svg.append('g')
         .attr('transform', `translate(0, ${graphHeight})`)
-        .call(d3.axisBottom(xScaling).ticks(40))
+        .call(d3.axisBottom(xScaling).ticks(tickCount))
+    addXAxisLabel(xAxisGroup, graphWidth, "Ticks")
 
     
     const yMax = d3.max(data, row => Math.max(...row))
@@ -53,17 +122,26 @@ function render(data) {
         .domain([0, yMax])
         .range([graphHeight, 0])
 
-    svg.append('g')
+    let yAxisGroup = svg.append('g')
         .call(d3.axisLeft(yScaling));
+    addYAxisLabel(yAxisGroup, graphHeight, "Milliseconds")
 
     
     const lineGenerator = d3.line()
     .x(function(d, index) { 
-        // print(`for x, d[0] is ${d[0]}`)
         return xScaling(index)})
     .y(function(d) { 
-        // print(`for y, d[0] is ${d[0]}`)
         return yScaling(d[0])})
+
+    const tooltip = d3.select('body')
+    .append('div')
+    .attr('class', 'tooltip');
+
+    let circleTooltip = createCircleTooltip();
+
+    const listenerRectangle = svg.append('rect')
+    .attr('width', width)
+    .attr('height', height);
 
     svg.append('path')
         .datum(data)
