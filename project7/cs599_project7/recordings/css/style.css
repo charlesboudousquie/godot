@@ -1,20 +1,15 @@
 
-/* css code is inspired by https://www.youtube.com/watch?v=uyPYxx-WGxc&list=PLdJuTVexUXU1CW9IduXFtS2vjQcDAOgz7&index=3 */
+/* css code is inspired by https://www.youtube.com/watch?v=uyPYxx-WGxc&list=PLdJuTVexUXU1CW9IduXFtS2vjQcDAOgz7&index=3 
 
-rect {
+and 
+
+https://www.youtube.com/watch?v=ZFPfU7JsD_E
+*/
+
+/* rect {
     pointer-events: all;
     fill-opacity: 0;
     stroke-opacity: 0;
     z-index: 1;
-}
+} */
 
-.tooltip {
-    position: absolute;
-    padding: 10;
-    background-color: steelblue;
-    color: white;
-    border: 1px solid white;
-    border-radius: 10px;
-    display: none;
-    opacity: .75;
-}

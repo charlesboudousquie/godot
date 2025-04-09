@@ -5,6 +5,7 @@ const margins ={
 const width = 900;
 const height = 600;
 const tickCount = 20;
+const tooltipPadding = 5;
 
 const graphWidth = width - margins.right - margins.left;
 const graphHeight = height - margins.top - margins.bottom;
@@ -14,13 +15,28 @@ let g_columnIndex = 0;
 
 let sortedColumns = []
 
+let xScaling = d3.scaleLinear();
+let yScaling = d3.scaleLinear();
+
+let currentData = null;
+
 // Add svg anchor to page
 var svg = d3.select("#chart-container")
     .append('svg')
         .attr('width', width)
         .attr('height', height)
-    .append('g')
+        .append('g')
         .attr('transform', `translate(${margins.left}, ${margins.top})`);
+        
+let tooltip = svg.append('g');
+
+function pointerLeavesGraph() {
+    // don't display tooltip if mouse not within graph
+    tooltip.style('display', 'none');
+}
+
+svg.on('pointerleave', pointerLeavesGraph())
+.on('pointerenter pointermove', mouseMoved)
 
 function print(message){
     console.log(message);
@@ -49,45 +65,72 @@ function addYAxisLabel(group, innerHeight, label) {
 
 // tooltip code if from https://www.youtube.com/watch?v=uyPYxx-WGxc&list=PLdJuTVexUXU1CW9IduXFtS2vjQcDAOgz7&index=3
 
-function createCircleTooltip() {
-    return svg.append('circle')
-    .attr('r', 0)
-    .attr('fill', 'steelblue')
-    .attr('stroke', 'white')
-    .attr('opacity', .7)
-    .style('pointer-events', 'none');
-}
+// function createCircleTooltip() {
+//     return svg.append('circle')
+//     .attr('r', 0)
+//     .attr('fill', 'steelblue')
+//     .attr('stroke', 'white')
+//     .attr('opacity', .7)
+//     .style('pointer-events', 'none');
+// }
 
-function createListenerRectangle(data, xScaling, yScaling) {
-    const listenerRectangle = svg.append('rect')
-    .attr('width', width)
-    .attr('height', height);
-
-    listenerRectangle.on("mousemove", function (event) {
+function mouseMoved(event) {
         // Get mouse x and y
-        const [mouseX, mouseY] = d3.pointer(event);
-        // Translate from pixel range to domain range(physics ticks)
-        const tickValue = xScaling.invert(mouseX);
-        // bisector will take a row of data and return the appropriate datum
-        // depending on which graph is currently selected.
-        // .center means choose the index that would be closest to us.
-        const bisector = d3.bisector((d) => d[g_columnIndex]).center
-        const closestIndex = bisector(data, tickValue);
-        // get milliseconds
-        const datum = data[closestIndex][g_columnIndex];
+        const [mouseX, _] = d3.pointer(event);
 
-        const newX= xScaling(closestIndex);
+        print(`mouseX is ${mouseX} with type ${typeof mouseX}`)
+
+        // Translate from pixel range to domain range(physics ticks)
+        const tickValue = Math.round(xScaling.invert(mouseX));
+        print(`tick value is ${tickValue}`)
+
+        // get milliseconds
+        const datum = currentData[tickValue][g_columnIndex];
+
+        const newX= xScaling(tickValue);
         const newY = yScaling(datum);
+
+        // print(`newX and newY: ${newX}, ${newY}`)
        
+        // get rid of display attribute thus allowing it to draw by default
+        tooltip.style('display', null)
         tooltip.attr('transform', `translate(${newX}, ${newY})`);
-        tooltip.selectAll('text')
+        // Raise tooltip to top of screen z axis
+        tooltip.raise()
+
+        // Add text to rectangle
+        const text = tooltip.selectAll('text')
             .data([,])
             .join('text')
-            
+            .call(function(text) {
+                // <tspan> is essentially subtext within a text element.
+                text.selectAll('tspan')
+                // set the ascii text, has to be enclosed in an array or else each character will be given its own tspan!!!
+                .data([`Tick: ${tickValue}, Milliseconds: ${datum}`])
+                .join('tspan')
+                  .attr('x', 0)
+                  //   .attr('y', )
+                  .attr('font-weight', 'bold')
+                  .text(d => d);
 
-    });
+                  return text;
+            })
 
-    return listenerRectangle;
+        // Get bounding box for text.
+        const boundingBox = text.node().getBBox();
+        print(`bound box is ${boundingBox.width}, ${boundingBox.height}`)
+        tooltip.selectAll('rect')
+            .data([null])
+            .join('rect')
+                .attr('x', boundingBox.x - tooltipPadding)
+                .attr('y', boundingBox.y - tooltipPadding)
+                .attr('width', boundingBox.width + tooltipPadding * 2)
+                .attr('height', boundingBox.height + tooltipPadding * 2)
+                .attr('fill', 'white')
+                // .attr('fill', 'none')
+                .attr('stroke', 'black')
+                // Lower text box behind the actual text
+                .lower()
 }
 
 function render(data) {
@@ -103,7 +146,8 @@ function render(data) {
     // print(`max x is ${xMax}`)
     
     // create x axis aka ticks
-    const xScaling = d3.scaleLinear()
+    // const xScaling = d3.scaleLinear()
+    xScaling
     .domain([0, xMax])
     .range([0, graphWidth])
     
@@ -118,7 +162,8 @@ function render(data) {
     print(`max y is ${yMax}`)
     
     // create y axis aka milliseconds
-    const yScaling = d3.scaleLinear()
+    // const yScaling = d3.scaleLinear()
+    yScaling
         .domain([0, yMax])
         .range([graphHeight, 0])
 
@@ -133,15 +178,15 @@ function render(data) {
     .y(function(d) { 
         return yScaling(d[0])})
 
-    const tooltip = d3.select('body')
-    .append('div')
-    .attr('class', 'tooltip');
+    // const tooltip = d3.select('body')
+    // .append('div')
+    // .attr('class', 'tooltip');
 
-    let circleTooltip = createCircleTooltip();
+    // let circleTooltip = createCircleTooltip();
 
-    const listenerRectangle = svg.append('rect')
-    .attr('width', width)
-    .attr('height', height);
+    // const listenerRectangle = svg.append('rect')
+    // .attr('width', width)
+    // .attr('height', height);
 
     svg.append('path')
         .datum(data)
@@ -198,6 +243,6 @@ d3.csv('default_physics_timer_recordings_cubes.csv')
             // print(`data[i] is: ${data[i]}`)
          }
         
+         currentData = data;
          render(data);
-
   });
