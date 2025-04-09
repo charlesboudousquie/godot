@@ -22,7 +22,16 @@ let sortedColumnNames = []
 let xScaling = d3.scaleLinear();
 let yScaling = d3.scaleLinear();
 
+const lineGenerator = d3.line()
+    .x(function(_, index) { return xScaling(index)})
+    .y(function(d) { return yScaling(d[g_columnIndex])})
+
 let currentData = null;
+let xAxisGroup = null;
+
+let brush = d3.brushX()
+   .extent([[margins.left, margins.top],[margins.left + graphWidth, margins.right + graphHeight]])
+   .on('end', updateGraph)
 
 // Add svg anchor to page
 var svg = d3.select("#chart-container")
@@ -33,6 +42,41 @@ var svg = d3.select("#chart-container")
         .attr('transform', `translate(${margins.left}, ${margins.top})`);
         
 let tooltip = null;
+
+function updateGraph(event) {
+    // print(`event ${event}`)
+    var extents = event.selection;
+
+    // If event was triggered by code instead of user interaction
+    // then just return.
+    if (!event.sourceEvent) {
+        return;
+    }
+
+    if (!extents) {
+        print('no extents')
+        // reset graph to default extents
+        xScaling.domain([0,  currentData.length])
+        // render(currentData);
+    } else {
+        print(`extents are ${extents}`)
+        // Use the beginning and end pixelX values to establish a new domain.
+        xScaling.domain([
+            xScaling.invert(extents[0]),
+            xScaling.invert(extents[1])]
+        )
+        // hide brush
+        svg.select('.brush').call(brush.move, null)
+    }
+
+    xAxisGroup.transition().duration(1000)
+        .call(d3.axisBottom(xScaling).ticks(tickCount))
+
+    svg.selectAll('path')
+        .datum(currentData)
+        .transition().duration(1000)
+        .attr('d', lineGenerator)
+}
 
 function pointerLeavesGraph() {
     // don't display tooltip if mouse not within graph
@@ -68,7 +112,7 @@ function mouseMoved(event) {
         // Get mouse x and y
         const [mouseX, _] = d3.pointer(event);
 
-        print(`mouseX is ${mouseX} with type ${typeof mouseX}`)
+        // print(`mouseX is ${mouseX} with type ${typeof mouseX}`)
 
         // Translate from pixel range to domain range(physics ticks)
         let tickValue = Math.round(xScaling.invert(mouseX));
@@ -76,10 +120,10 @@ function mouseMoved(event) {
         tickValue = Math.min(currentData.length - 1, tickValue) 
         tickValue = Math.max(tickValue, 0)
 
-        print(`tick value is ${tickValue}`)
+        // print(`tick value is ${tickValue}`)
 
         // get milliseconds
-        print(typeof g_columnIndex)
+        // print(typeof g_columnIndex)
         const datum = currentData[tickValue][g_columnIndex];
 
         const newX= xScaling(tickValue);
@@ -113,7 +157,7 @@ function mouseMoved(event) {
 
         // Get bounding box for text.
         const boundingBox = text.node().getBBox();
-        print(`bound box is ${boundingBox.width}, ${boundingBox.height}`)
+        // print(`bound box is ${boundingBox.width}, ${boundingBox.height}`)
         tooltip.selectAll('rect')
             .data([null])
             .join('rect')
@@ -131,7 +175,13 @@ function mouseMoved(event) {
 function render(data) {
 
     svg.selectAll('*').remove()
+    
+    // recreate brush
+    svg.append('g')
+    .attr('class', 'brush')
+    .call(brush);
 
+    // recreate tooltip
     tooltip = svg.append('g');
     svg.on('pointerleave', pointerLeavesGraph())
     .on('pointerenter pointermove', mouseMoved)
@@ -139,6 +189,8 @@ function render(data) {
     // "#" if for ids,  "." is for classes in html
     let engineText = 'Physics Engine: ' + g_physicsEngine;
     d3.select('#current-simulation').text(engineText);
+    let objectCountText = 'Colliding Objects ' + String(g_objectCount)
+    d3.select('#object-count').text(objectCountText)
 
     // for now maximum is for one column
     print(data)
@@ -156,7 +208,7 @@ function render(data) {
     .range([0, graphWidth])
     
     // append x axis
-    let xAxisGroup = svg.append('g')
+    xAxisGroup = svg.append('g')
         .attr('transform', `translate(0, ${graphHeight})`)
         .call(d3.axisBottom(xScaling).ticks(tickCount))
     addXAxisLabel(xAxisGroup, graphWidth, "Ticks")
@@ -175,9 +227,9 @@ function render(data) {
     addYAxisLabel(yAxisGroup, graphHeight, "Milliseconds")
 
     
-    const lineGenerator = d3.line()
-    .x(function(_, index) { return xScaling(index)})
-    .y(function(d) { return yScaling(d[g_columnIndex])})
+    // const lineGenerator = d3.line()
+    // .x(function(_, index) { return xScaling(index)})
+    // .y(function(d) { return yScaling(d[g_columnIndex])})
 
     svg.append('path')
         .datum(data)
