@@ -71,7 +71,11 @@ function mouseMoved(event) {
         print(`mouseX is ${mouseX} with type ${typeof mouseX}`)
 
         // Translate from pixel range to domain range(physics ticks)
-        const tickValue = Math.round(xScaling.invert(mouseX));
+        let tickValue = Math.round(xScaling.invert(mouseX));
+
+        tickValue = Math.min(currentData.length - 1, tickValue) 
+        tickValue = Math.max(tickValue, 0)
+
         print(`tick value is ${tickValue}`)
 
         // get milliseconds
@@ -172,10 +176,8 @@ function render(data) {
 
     
     const lineGenerator = d3.line()
-    .x(function(_, index) { 
-        return xScaling(index)})
-    .y(function(d) { 
-        return yScaling(d[g_columnIndex])})
+    .x(function(_, index) { return xScaling(index)})
+    .y(function(d) { return yScaling(d[g_columnIndex])})
 
     svg.append('path')
         .datum(data)
@@ -214,20 +216,14 @@ function getSortedColumnNames(data) {
 function prevGroup() {
     let numColumns = sortedColumnNames.length
     g_columnIndex = (g_columnIndex - 1 + numColumns) % numColumns
-    // g_columnIndex -= 1
-    // if(g_columnIndex < 0) {
-    //     g_columnIndex = 3;
-    // }
-    print(`new column index: ${g_columnIndex}`)
+    // print(`new column index: ${g_columnIndex}`)
     g_objectCount = getNumFromString(sortedColumnNames[g_columnIndex])
     render(currentData)
 }
 
 function nextGroup() {
     g_columnIndex = (g_columnIndex + 1) % sortedColumnNames.length
-    // g_columnIndex += 1
-    // g_columnIndex = g_columnIndex % 4
-    print(`new column index: ${g_columnIndex}`)
+    // print(`new column index: ${g_columnIndex}`)
     g_objectCount = getNumFromString(sortedColumnNames[g_columnIndex])
     render(currentData)
 }
@@ -235,21 +231,20 @@ function nextGroup() {
 function prevGraph() {
     g_columnIndex = 0;
     currentGraphIndex = (currentGraphIndex - 1 + graphNames.length) % graphNames.length
-    print(`graph index ${currentGraphIndex}`)
-    print(`current graph: ${graphNames[currentGraphIndex]}`)
+    // print(`graph index ${currentGraphIndex}`)
+    // print(`current graph: ${graphNames[currentGraphIndex]}`)
     loadGraph(graphNames[currentGraphIndex])
 }
 
 function nextGraph() {
     g_columnIndex = 0;
     currentGraphIndex = (currentGraphIndex + 1) % graphNames.length
-    print(`graph index ${currentGraphIndex}`)
-    print(`current graph: ${graphNames[currentGraphIndex]}`)
+    // print(`graph index ${currentGraphIndex}`)
+    // print(`current graph: ${graphNames[currentGraphIndex]}`)
     loadGraph(graphNames[currentGraphIndex])
 }
 
 function loadGraph(graphName) {
-// default_physics_timer_recordings_cubes.csv
 d3.csv(graphName)
 .then(data => {
     getSortedColumnNames(data);
