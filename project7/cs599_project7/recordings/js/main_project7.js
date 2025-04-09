@@ -1,16 +1,22 @@
 const margins ={
-    top: 30, right: 100, bottom: 60, left: 80
+    top: 100, right: 100, bottom: 60, left: 80
 };
 
 const width = 900;
 const height = 800;
 const tickCount = 20;
 const tooltipPadding = 5;
+const tooltipOffset = 20
 
 const graphWidth = width - margins.right - margins.left;
 const graphHeight = height - margins.top - margins.bottom;
 
-let graphNames = ['default_physics_timer_recordings_cubes.csv', 'jolt_physics_timer_recordings_cubes.csv']
+let graphNames = [
+    'default_physics_timer_recordings_cubes.csv', 
+    'jolt_physics_timer_recordings_cubes.csv', 
+    'default_physics_timer_recordings_spheres.csv', 
+    'jolt_physics_timer_recordings_spheres.csv'
+]
 
 let g_columnIndex = 0;
 let g_objectCount = 0;
@@ -30,18 +36,23 @@ let currentData = null;
 let xAxisGroup = null;
 
 let brush = d3.brushX()
-   .extent([[margins.left, margins.top],[margins.left + graphWidth, margins.right + graphHeight]])
-   .on('end', updateGraph)
+.extent([[0,0],[graphWidth, graphHeight]])
+.on('end', updateGraph)
 
 // Add svg anchor to page
 var svg = d3.select("#chart-container")
-    .append('svg')
-        .attr('width', width)
-        .attr('height', height)
-        .append('g')
-        .attr('transform', `translate(${margins.left}, ${margins.top})`);
-        
+.append('svg')
+.attr('width', width)
+.attr('height', height)
+.append('g')
+.attr('transform', `translate(${margins.left}, ${margins.top})`);
+
 let tooltip = null;
+const tooltipCircleSize = 5;
+
+function getCurrentGraphName() {
+    return graphNames[currentGraphIndex];
+}
 
 function updateGraph(event) {
     // print(`event ${event}`)
@@ -57,9 +68,10 @@ function updateGraph(event) {
         print('no extents')
         // reset graph to default extents
         xScaling.domain([0,  currentData.length])
-        // render(currentData);
     } else {
         print(`extents are ${extents}`)
+        print(`inverted extents are: ${xScaling.invert(extents[0])}, 
+            ${xScaling.invert(extents[1])}`)
         // Use the beginning and end pixelX values to establish a new domain.
         xScaling.domain([
             xScaling.invert(extents[0]),
@@ -81,6 +93,8 @@ function updateGraph(event) {
 function pointerLeavesGraph() {
     // don't display tooltip if mouse not within graph
     tooltip.style('display', 'none');
+    svg.selectAll('circle')
+        .attr('r', 0)
 }
 
 function print(message){
@@ -107,6 +121,15 @@ function addYAxisLabel(group, innerHeight, label) {
           .attr("font-size","34px")
           .text(label);
   }
+
+function createTooltipCircle() {
+    svg.append('circle')
+        .attr('r', 0)
+        .attr('fill', 'steelblue')
+        .attr('stroke', 'white')
+        .attr('stroke-width', 1)
+        .attr('opacity', .7)
+}
 
 function mouseMoved(event) {
         // Get mouse x and y
@@ -137,6 +160,11 @@ function mouseMoved(event) {
         // Raise tooltip to top of screen z axis
         tooltip.raise()
 
+        svg.selectAll('circle')
+          .attr('r', tooltipCircleSize)
+          .attr('cx', newX)
+          .attr('cy', newY)
+
         // Add text to rectangle
         const text = tooltip.selectAll('text')
             .data([,])
@@ -147,10 +175,11 @@ function mouseMoved(event) {
                 // set the ascii text, has to be enclosed in an array or else each character will be given its own tspan!!!
                 .data([`Tick: ${tickValue}, Milliseconds: ${datum}`])
                 .join('tspan')
-                  .attr('x', 0)
+                  .attr('x', tooltipOffset)
                   //   .attr('y', )
                   .attr('font-weight', 'bold')
-                  .text(d => d);
+                  .text(d => d)
+                  .style('padding', '5px');
 
                   return text;
             })
@@ -166,16 +195,16 @@ function mouseMoved(event) {
                 .attr('width', boundingBox.width + tooltipPadding * 2)
                 .attr('height', boundingBox.height + tooltipPadding * 2)
                 .attr('fill', 'white')
-                // .attr('fill', 'none')
                 .attr('stroke', 'black')
                 // Lower text box behind the actual text
                 .lower()
 }
 
 function render(data) {
-
     svg.selectAll('*').remove()
     
+    createTooltipCircle();
+
     // recreate brush
     svg.append('g')
     .attr('class', 'brush')
@@ -183,14 +212,20 @@ function render(data) {
 
     // recreate tooltip
     tooltip = svg.append('g');
-    svg.on('pointerleave', pointerLeavesGraph())
+    svg.on('pointerleave', pointerLeavesGraph)
     .on('pointerenter pointermove', mouseMoved)
 
     // "#" if for ids,  "." is for classes in html
     let engineText = 'Physics Engine: ' + g_physicsEngine;
     d3.select('#current-simulation').text(engineText);
+    g_objectCount = getNumFromString(sortedColumnNames[g_columnIndex])
     let objectCountText = 'Colliding Objects ' + String(g_objectCount)
     d3.select('#object-count').text(objectCountText)
+
+    let graphName = getCurrentGraphName()
+    let objectTypeText = 'Object Type: ';
+    objectTypeText += graphName.includes('cubes') ? 'Cubes' : 'Spheres';
+    d3.select('#object-type').text(objectTypeText)
 
     // for now maximum is for one column
     print(data)
@@ -214,7 +249,10 @@ function render(data) {
     addXAxisLabel(xAxisGroup, graphWidth, "Ticks")
 
     
-    const yMax = d3.max(data, row => Math.max(...row))
+    const yMax = d3.max(data, 
+        // row => Math.max(...row)
+        row => row[g_columnIndex]
+    )
     print(`max y is ${yMax}`)
     
     // create y axis aka milliseconds
@@ -227,9 +265,7 @@ function render(data) {
     addYAxisLabel(yAxisGroup, graphHeight, "Milliseconds")
 
     
-    // const lineGenerator = d3.line()
-    // .x(function(_, index) { return xScaling(index)})
-    // .y(function(d) { return yScaling(d[g_columnIndex])})
+
 
     svg.append('path')
         .datum(data)
@@ -285,7 +321,7 @@ function prevGraph() {
     currentGraphIndex = (currentGraphIndex - 1 + graphNames.length) % graphNames.length
     // print(`graph index ${currentGraphIndex}`)
     // print(`current graph: ${graphNames[currentGraphIndex]}`)
-    loadGraph(graphNames[currentGraphIndex])
+    loadGraph(getCurrentGraphName())
 }
 
 function nextGraph() {
@@ -293,7 +329,7 @@ function nextGraph() {
     currentGraphIndex = (currentGraphIndex + 1) % graphNames.length
     // print(`graph index ${currentGraphIndex}`)
     // print(`current graph: ${graphNames[currentGraphIndex]}`)
-    loadGraph(graphNames[currentGraphIndex])
+    loadGraph(getCurrentGraphName())
 }
 
 function loadGraph(graphName) {
@@ -325,4 +361,4 @@ d3.csv(graphName)
   });
 }
 
-loadGraph(graphNames[currentGraphIndex]);
+loadGraph(getCurrentGraphName());

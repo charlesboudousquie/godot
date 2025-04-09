@@ -73,7 +73,6 @@ func createObjects():
 		ps.body_set_state(object, PhysicsServer3D.BODY_STATE_TRANSFORM, trans)
 		
 		# physics properties
-		#ps.body_set
 		ps.body_set_param(object, PhysicsServer3D.BODY_PARAM_BOUNCE, 1)
 		
 		var mesh = rs.instance_create2(obj_mesh, get_world_3d().scenario)
@@ -149,9 +148,3 @@ func clearObjects():
 		meshes.clear()
 		objects.clear()
 		positions.clear()
-
-
-#@export var absorbent = false
-#@export var bounciness = 0.0
-#@export var friction = 1.0
-#@export var isRough = false
