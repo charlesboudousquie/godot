@@ -1,19 +1,23 @@
 const margins ={
-    top: 30, right: 30, bottom: 60, left: 80
+    top: 30, right: 100, bottom: 60, left: 80
 };
 
 const width = 900;
-const height = 600;
+const height = 800;
 const tickCount = 20;
 const tooltipPadding = 5;
 
 const graphWidth = width - margins.right - margins.left;
 const graphHeight = height - margins.top - margins.bottom;
 
+let graphNames = ['default_physics_timer_recordings_cubes.csv', 'jolt_physics_timer_recordings_cubes.csv']
 
 let g_columnIndex = 0;
+let g_objectCount = 0;
+let g_physicsEngine = null;
+let currentGraphIndex = 0;
 
-let sortedColumns = []
+let sortedColumnNames = []
 
 let xScaling = d3.scaleLinear();
 let yScaling = d3.scaleLinear();
@@ -28,15 +32,12 @@ var svg = d3.select("#chart-container")
         .append('g')
         .attr('transform', `translate(${margins.left}, ${margins.top})`);
         
-let tooltip = svg.append('g');
+let tooltip = null;
 
 function pointerLeavesGraph() {
     // don't display tooltip if mouse not within graph
     tooltip.style('display', 'none');
 }
-
-svg.on('pointerleave', pointerLeavesGraph())
-.on('pointerenter pointermove', mouseMoved)
 
 function print(message){
     console.log(message);
@@ -63,17 +64,6 @@ function addYAxisLabel(group, innerHeight, label) {
           .text(label);
   }
 
-// tooltip code if from https://www.youtube.com/watch?v=uyPYxx-WGxc&list=PLdJuTVexUXU1CW9IduXFtS2vjQcDAOgz7&index=3
-
-// function createCircleTooltip() {
-//     return svg.append('circle')
-//     .attr('r', 0)
-//     .attr('fill', 'steelblue')
-//     .attr('stroke', 'white')
-//     .attr('opacity', .7)
-//     .style('pointer-events', 'none');
-// }
-
 function mouseMoved(event) {
         // Get mouse x and y
         const [mouseX, _] = d3.pointer(event);
@@ -85,6 +75,7 @@ function mouseMoved(event) {
         print(`tick value is ${tickValue}`)
 
         // get milliseconds
+        print(typeof g_columnIndex)
         const datum = currentData[tickValue][g_columnIndex];
 
         const newX= xScaling(tickValue);
@@ -135,6 +126,16 @@ function mouseMoved(event) {
 
 function render(data) {
 
+    svg.selectAll('*').remove()
+
+    tooltip = svg.append('g');
+    svg.on('pointerleave', pointerLeavesGraph())
+    .on('pointerenter pointermove', mouseMoved)
+
+    // "#" if for ids,  "." is for classes in html
+    let engineText = 'Physics Engine: ' + g_physicsEngine;
+    d3.select('#current-simulation').text(engineText);
+
     // for now maximum is for one column
     print(data)
     print(data[0])
@@ -146,7 +147,6 @@ function render(data) {
     // print(`max x is ${xMax}`)
     
     // create x axis aka ticks
-    // const xScaling = d3.scaleLinear()
     xScaling
     .domain([0, xMax])
     .range([0, graphWidth])
@@ -162,7 +162,6 @@ function render(data) {
     print(`max y is ${yMax}`)
     
     // create y axis aka milliseconds
-    // const yScaling = d3.scaleLinear()
     yScaling
         .domain([0, yMax])
         .range([graphHeight, 0])
@@ -173,20 +172,10 @@ function render(data) {
 
     
     const lineGenerator = d3.line()
-    .x(function(d, index) { 
+    .x(function(_, index) { 
         return xScaling(index)})
     .y(function(d) { 
-        return yScaling(d[0])})
-
-    // const tooltip = d3.select('body')
-    // .append('div')
-    // .attr('class', 'tooltip');
-
-    // let circleTooltip = createCircleTooltip();
-
-    // const listenerRectangle = svg.append('rect')
-    // .attr('width', width)
-    // .attr('height', height);
+        return yScaling(d[g_columnIndex])})
 
     svg.append('path')
         .datum(data)
@@ -196,6 +185,10 @@ function render(data) {
         .attr('d', lineGenerator)
 }
 
+function getNumFromString(string) {
+    return +string.match(/\d+/)[0];
+}
+
 function getSortedColumnNames(data) {
      // get the column names by getting keys stored in first row of data
      let columns = Object.keys(data[0]);
@@ -203,46 +196,86 @@ function getSortedColumnNames(data) {
      // sort by numerical order
      // sorting strings like: "num objects 729"
      columns.sort(function(first, second){
-        //  print(`first is ${first}`)
-        //  print(`second is ${second}`)
- 
          // match() returns an array containing, the string, the index, the input, and the length of the matches found. We only need index 0.
- 
-         var firstCounter = +first.match(/\d+/)[0];
-         var secondCounter = +second.match(/\d+/)[0];
+         var firstCounter = getNumFromString(first);
+         var secondCounter = getNumFromString(second);
+        //  print(`first counter is ${firstCounter}`)
+        //  print(`second counter is ${secondCounter}`)
          return firstCounter - secondCounter;
      });
  
      print(`columns are ${columns}`)
      
-     sortedColumns = columns
+     sortedColumnNames = columns
  
-     print(`sorted columns are ${sortedColumns}`)
+     print(`sorted columns are ${sortedColumnNames}`)
 }
 
+function prevGroup() {
+    let numColumns = sortedColumnNames.length
+    g_columnIndex = (g_columnIndex - 1 + numColumns) % numColumns
+    // g_columnIndex -= 1
+    // if(g_columnIndex < 0) {
+    //     g_columnIndex = 3;
+    // }
+    print(`new column index: ${g_columnIndex}`)
+    g_objectCount = getNumFromString(sortedColumnNames[g_columnIndex])
+    render(currentData)
+}
+
+function nextGroup() {
+    g_columnIndex = (g_columnIndex + 1) % sortedColumnNames.length
+    // g_columnIndex += 1
+    // g_columnIndex = g_columnIndex % 4
+    print(`new column index: ${g_columnIndex}`)
+    g_objectCount = getNumFromString(sortedColumnNames[g_columnIndex])
+    render(currentData)
+}
+
+function prevGraph() {
+    g_columnIndex = 0;
+    currentGraphIndex = (currentGraphIndex - 1 + graphNames.length) % graphNames.length
+    print(`graph index ${currentGraphIndex}`)
+    print(`current graph: ${graphNames[currentGraphIndex]}`)
+    loadGraph(graphNames[currentGraphIndex])
+}
+
+function nextGraph() {
+    g_columnIndex = 0;
+    currentGraphIndex = (currentGraphIndex + 1) % graphNames.length
+    print(`graph index ${currentGraphIndex}`)
+    print(`current graph: ${graphNames[currentGraphIndex]}`)
+    loadGraph(graphNames[currentGraphIndex])
+}
+
+function loadGraph(graphName) {
 // default_physics_timer_recordings_cubes.csv
-d3.csv('default_physics_timer_recordings_cubes.csv')
+d3.csv(graphName)
 .then(data => {
     getSortedColumnNames(data);
 
-        // print(`data length ${data.length}`)
-        // print(`sorted columns before loop ${sortedColumns}`)
-         for (var i = 0; i < data.length; i++) {
-            const oldRow = data[i];
-            // print('old row is')
-            // print(oldRow)
-            let newRow = []
-            sortedColumns.forEach(col => {
-                // print(typeof col)
-                 newRow.push(+oldRow[col]);
-            });
+    g_physicsEngine = graphName.includes('default') ? 'Default' : 'Jolt';
 
-            data[i] = newRow;
-            // print(`new row is`)
-            // print(newRow)
-            // print(`data[i] is: ${data[i]}`)
-         }
-        
-         currentData = data;
-         render(data);
+    // print(`data length ${data.length}`)
+    // print(`sorted columns before loop ${sortedColumnNames}`)
+     for (var i = 0; i < data.length; i++) {
+        const oldRow = data[i];
+        // print('old row is')
+        // print(oldRow)
+        let newRow = []
+        sortedColumnNames.forEach(col => {
+            // print(typeof col)
+             newRow.push(+oldRow[col]);
+        });
+        data[i] = newRow;
+        // print(`new row is`)
+        // print(newRow)
+        // print(`data[i] is: ${data[i]}`)
+     }
+    
+     currentData = data;
+     render(currentData);
   });
+}
+
+loadGraph(graphNames[currentGraphIndex]);

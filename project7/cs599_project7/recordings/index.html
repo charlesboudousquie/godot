@@ -13,10 +13,20 @@
         <!-- Custom CSS -->
         <link rel="stylesheet" href="css/style.css">
 
+        <!-- previous and next buttons to switch between the different timing sessions -->
+        <button type="button" onclick="prevGroup()">Prev Group</button>
+        <button type="button" onclick="nextGroup()">Next Group</button>
+
+        <button type="button" onclick="prevGraph()">Prev Graph</button>
+        <button type="button" onclick="nextGraph()">Next Graph</button>
+
+
+
     <body>
         <nav class="navbar navbar-default">
             <div id="chart-container" class="container">
-                <h1>Comparing Physics Simulations</h1>     
+                <h1>Godot Physics Simulation</h1>
+                <h2 id="current-simulation" value=""></h2>
             </div>
             <!-- <div id="tooltip" class="hidden">
                  <p><strong> Milliseconds </strong></p>
