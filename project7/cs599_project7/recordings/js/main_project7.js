@@ -34,6 +34,7 @@ const lineGenerator = d3.line()
 
 let currentData = null;
 let xAxisGroup = null;
+let currentPath = null;
 
 let brush = d3.brushX()
 .extent([[0,0],[graphWidth, graphHeight]])
@@ -84,8 +85,15 @@ function updateGraph(event) {
     xAxisGroup.transition().duration(1000)
         .call(d3.axisBottom(xScaling).ticks(tickCount))
 
-    svg.selectAll('path')
-        .datum(currentData)
+
+        // ???
+    print(`xScaling domain is ${xScaling.domain()}`)
+    const visibleData = currentData.filter((d, index) => 
+        index >= xScaling.domain()[0] && index <= xScaling.domain()[1]
+    );
+
+    currentPath
+        .datum(visibleData)
         .transition().duration(1000)
         .attr('d', lineGenerator)
 }
@@ -264,10 +272,7 @@ function render(data) {
         .call(d3.axisLeft(yScaling));
     addYAxisLabel(yAxisGroup, graphHeight, "Milliseconds")
 
-    
-
-
-    svg.append('path')
+    currentPath = svg.append('path')
         .datum(data)
         .attr('fill', 'none')
         .attr('stroke', 'steelblue')
