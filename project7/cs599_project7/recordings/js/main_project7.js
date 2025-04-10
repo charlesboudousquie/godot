@@ -31,7 +31,9 @@ let xScaling = d3.scaleLinear();
 let yScaling = d3.scaleLinear();
 
 const lineGenerator = d3.line()
-    .x(function(_, index) { return xScaling(index)})
+    .x(function(_, index) { 
+        // print(`lineGenerator: index: ${index}, result: ${xScaling(index)}`);
+        return xScaling(index)})
     .y(function(d) { return yScaling(d[g_columnIndex])})
 
 let currentData = null;
@@ -52,6 +54,10 @@ var svg = d3.select("#chart-container")
 
 let tooltip = null;
 const tooltipCircleSize = 5;
+
+function printNodeType(name, obj) {
+    print(`${name} type is ${obj.node().nodeName}`)
+}
 
 function getCurrentGraphName() {
     return graphNames[currentGraphIndex];
@@ -84,15 +90,27 @@ function updateGraph(event) {
         svg.select('.brush').call(brush.move, null)
     }
 
+    // Redraws axis smoothly
     xAxisGroup.transition().duration(1000)
         .call(d3.axisBottom(xScaling).ticks(tickCount))
 
 
         // ???
-    // print(`xScaling domain is ${xScaling.domain()}`)
-    // const visibleData = currentData.filter((d, index) => 
-    //     index >= xScaling.domain()[0] && index <= xScaling.domain()[1]
-    // );
+    print(`xScaling domain is ${xScaling.domain()}`)
+    const visibleData = currentData.filter((_, index) => {
+        // print(`visible data d is ${d}`)
+        return index >= xScaling.domain()[0] && index <= xScaling.domain()[1]
+    });
+    
+    print(`visibleData is ${visibleData}`)
+    
+    // The bounds don't necesarrily start at zero, but the new indices created will so shift them
+    // over to the beginning of the new domain so we don't fly off the graph.
+    lineGenerator.x((_, index) => 
+        { 
+            // print(`update: index is ${index}, result is ${index + xScaling(xScaling.domain()[0] + index)}`)
+            return xScaling(xScaling.domain()[0] + index); 
+        });
 
     currentPath
         .datum(visibleData)
@@ -252,15 +270,17 @@ function render(data) {
     .domain([0, xMax])
     .range([0, graphWidth])
     
-    // append x axis
+    // append x axis, xAxisGroup is of type 'g'
     xAxisGroup = svg.append('g')
         .attr('transform', `translate(0, ${graphHeight})`)
+        // axisBottom returns element of type 'g', includes a child 'path' element
+        // and multiple tick elements. ticks are of type 'g'.
         .call(d3.axisBottom(xScaling).ticks(tickCount))
-    addXAxisLabel(xAxisGroup, graphWidth, "Ticks")
 
+    printNodeType('xAxisGroup', xAxisGroup)
+    addXAxisLabel(xAxisGroup, graphWidth, "Ticks")
     
     const yMax = d3.max(data, 
-        // row => Math.max(...row)
         row => row[g_columnIndex]
     )
     print(`max y is ${yMax}`)
@@ -274,12 +294,18 @@ function render(data) {
         .call(d3.axisLeft(yScaling));
     addYAxisLabel(yAxisGroup, graphHeight, "Milliseconds")
 
+    // reset line generator x domain to start at zero in case 
+    // updateGraph changed it.
+    lineGenerator.x(function(_, index) { return xScaling(index)})
+
+    // currentPath is of type 'path'
     currentPath = svg.append('path')
         .datum(data)
         .attr('fill', 'none')
         .attr('stroke', 'steelblue')
         .attr('stroke-width', 1.5)
         .attr('d', lineGenerator)
+    printNodeType('currentPath', currentPath)
 }
 
 function getNumFromString(string) {
