@@ -2,6 +2,8 @@ const margins ={
     top: 100, right: 100, bottom: 60, left: 80
 };
 
+// todo: fix aspect ratio(wider graph, not too tall so the spike are not too sharp on the graph), fix axes dissapearing
+
 const width = 900;
 const height = 800;
 const tickCount = 20;
@@ -87,10 +89,10 @@ function updateGraph(event) {
 
 
         // ???
-    print(`xScaling domain is ${xScaling.domain()}`)
-    const visibleData = currentData.filter((d, index) => 
-        index >= xScaling.domain()[0] && index <= xScaling.domain()[1]
-    );
+    // print(`xScaling domain is ${xScaling.domain()}`)
+    // const visibleData = currentData.filter((d, index) => 
+    //     index >= xScaling.domain()[0] && index <= xScaling.domain()[1]
+    // );
 
     currentPath
         .datum(visibleData)
