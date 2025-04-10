@@ -1,11 +1,9 @@
 const margins ={
-    top: 100, right: 100, bottom: 60, left: 80
+    top: 100, right: 200, bottom: 60, left: 80
 };
 
-// todo: fix aspect ratio(wider graph, not too tall so the spike are not too sharp on the graph), fix axes dissapearing
-
-const width = 900;
-const height = 800;
+const width = Math.min(window.innerWidth - 100, 1400);
+const height = 600;
 const tickCount = 20;
 const tooltipPadding = 5;
 const tooltipOffset = 20
@@ -102,7 +100,7 @@ function updateGraph(event) {
         return index >= xScaling.domain()[0] && index <= xScaling.domain()[1]
     });
     
-    print(`visibleData is ${visibleData}`)
+    // print(`visibleData is ${visibleData}`)
     
     // The bounds don't necesarrily start at zero, but the new indices created will so shift them
     // over to the beginning of the new domain so we don't fly off the graph.
@@ -153,8 +151,8 @@ function addYAxisLabel(group, innerHeight, label) {
 function createTooltipCircle() {
     svg.append('circle')
         .attr('r', 0)
-        .attr('fill', 'steelblue')
-        .attr('stroke', 'white')
+        .attr('fill', 'yellow')
+        .attr('stroke', 'black')
         .attr('stroke-width', 1)
         .attr('opacity', .7)
 }
@@ -193,6 +191,11 @@ function mouseMoved(event) {
           .attr('cx', newX)
           .attr('cy', newY)
 
+        const toolTipTextLines = [
+            `Tick: ${tickValue}`,
+            `Milliseconds: ${datum}`,
+        ];
+
         // Add text to rectangle
         const text = tooltip.selectAll('text')
             .data([,])
@@ -201,13 +204,16 @@ function mouseMoved(event) {
                 // <tspan> is essentially subtext within a text element.
                 text.selectAll('tspan')
                 // set the ascii text, has to be enclosed in an array or else each character will be given its own tspan!!!
-                .data([`Tick: ${tickValue}, Milliseconds: ${datum}`])
+                // .data([`Tick: ${tickValue}, Milliseconds: ${datum}`])
+                .data(toolTipTextLines)
                 .join('tspan')
                   .attr('x', tooltipOffset)
                   //   .attr('y', )
+                  .attr('dy', (_, i) => i === 0 ? 0 : '1.2em')
                   .attr('font-weight', 'bold')
                   .text(d => d)
-                  .style('padding', '5px');
+                  .style('padding', '5px')
+                  .style('height', 'auto')
 
                   return text;
             })
@@ -247,7 +253,7 @@ function render(data) {
     let engineText = 'Physics Engine: ' + g_physicsEngine;
     d3.select('#current-simulation').text(engineText);
     g_objectCount = getNumFromString(sortedColumnNames[g_columnIndex])
-    let objectCountText = 'Colliding Objects ' + String(g_objectCount)
+    let objectCountText = 'Colliding Objects: ' + String(g_objectCount)
     d3.select('#object-count').text(objectCountText)
 
     let graphName = getCurrentGraphName()

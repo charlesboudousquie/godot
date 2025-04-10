@@ -1,15 +1,9 @@
-
-/* css code is inspired by https://www.youtube.com/watch?v=uyPYxx-WGxc&list=PLdJuTVexUXU1CW9IduXFtS2vjQcDAOgz7&index=3 
-
-and 
-
-https://www.youtube.com/watch?v=ZFPfU7JsD_E
-*/
-
-/* rect {
-    pointer-events: all;
-    fill-opacity: 0;
-    stroke-opacity: 0;
-    z-index: 1;
-} */
-
+/* container for graph */
+    /* 'block' elements always force a new line of content(force subsequent objects to go below it) */
+    /* 'inline' shortens your bounding box to simply contain your elements and nothing more, no new line is added */
+    /* 'inline-block' respects the size/padding you give it but it does not automatically take up the whole width of the screen. 
+    Also a new line is NOT added. */
+    /* 'static' cannot move. */
+/* 'relative' is based on parent element. */
+/* 'absolute' does not care about parent elements, it is relative to root container, does not respect scrollbar either, will go off page if you scroll
+down to far. */
