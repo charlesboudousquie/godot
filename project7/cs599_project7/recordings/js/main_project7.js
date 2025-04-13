@@ -8,6 +8,8 @@ const tickCount = 20;
 const tooltipPadding = 5;
 const tooltipOffset = 20
 
+const engineCount = 2;
+
 const graphWidth = width - margins.right - margins.left;
 const graphHeight = height - margins.top - margins.bottom;
 
@@ -369,6 +371,25 @@ function nextGraph() {
     // print(`graph index ${currentGraphIndex}`)
     // print(`current graph: ${graphNames[currentGraphIndex]}`)
     loadGraph(getCurrentGraphName())
+}
+
+function switchObjectType() {
+    let old_column = g_columnIndex;
+    nextGraph();
+    nextGraph();
+    g_columnIndex = old_column;
+}
+
+function switchEngine() {
+    let index = currentGraphIndex % engineCount;
+
+    let old_column = g_columnIndex;
+    if(index == 0) {
+        nextGraph();
+    } else {
+        prevGraph();
+    }
+    g_columnIndex = old_column;
 }
 
 function loadGraph(graphName) {
