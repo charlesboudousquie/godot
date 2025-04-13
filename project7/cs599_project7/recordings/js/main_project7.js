@@ -24,6 +24,7 @@ let g_columnIndex = 0;
 let g_objectCount = 0;
 let g_physicsEngine = null;
 let currentGraphIndex = 0;
+let g_yMax = 0;
 
 let sortedColumnNames = []
 
@@ -236,7 +237,7 @@ function mouseMoved(event) {
                 .lower()
 }
 
-function render(data) {
+async function render(data) {
     svg.selectAll('*').remove()
     
     createTooltipCircle();
@@ -288,14 +289,15 @@ function render(data) {
     printNodeType('xAxisGroup', xAxisGroup)
     addXAxisLabel(xAxisGroup, graphWidth, "Ticks")
     
-    const yMax = d3.max(data, 
-        row => row[g_columnIndex]
-    )
-    print(`max y is ${yMax}`)
+    await findYMax();
+    // const yMax = d3.max(data, 
+    //     row => row[g_columnIndex]
+    // )
+    // print(`max y is ${yMax}`)
     
     // create y axis aka milliseconds
     yScaling
-        .domain([0, yMax])
+        .domain([0, g_yMax])
         .range([graphHeight, 0])
 
     let yAxisGroup = svg.append('g')
@@ -360,23 +362,20 @@ function nextGroup() {
 function prevGraph() {
     g_columnIndex = 0;
     currentGraphIndex = (currentGraphIndex - 1 + graphNames.length) % graphNames.length
-    // print(`graph index ${currentGraphIndex}`)
-    // print(`current graph: ${graphNames[currentGraphIndex]}`)
     loadGraph(getCurrentGraphName())
 }
 
 function nextGraph() {
     g_columnIndex = 0;
     currentGraphIndex = (currentGraphIndex + 1) % graphNames.length
-    // print(`graph index ${currentGraphIndex}`)
-    // print(`current graph: ${graphNames[currentGraphIndex]}`)
     loadGraph(getCurrentGraphName())
 }
 
 function switchObjectType() {
     let old_column = g_columnIndex;
-    nextGraph();
-    nextGraph();
+    currentGraphIndex = (currentGraphIndex + 1) % graphNames.length
+    currentGraphIndex = (currentGraphIndex + 1) % graphNames.length
+    loadGraph(getCurrentGraphName());
     g_columnIndex = old_column;
 }
 
@@ -390,6 +389,37 @@ function switchEngine() {
         prevGraph();
     }
     g_columnIndex = old_column;
+}
+
+async function findYMax() {
+    g_yMax = 0;
+    let setted = false;
+    let maximums = [0,0,0,0]
+    for (let i = 0; i < graphNames.length; i++) {
+        let graphName = graphNames[i];
+        print(`examining graph ${graphName}`)
+        const data = await d3.csv(graphName);
+            for (var j = 0; j < data.length; j++) {
+                const oldRow = data[j];
+                let newRow = []
+                sortedColumnNames.forEach(col => {
+                     newRow.push(+oldRow[col]);
+                });
+                data[j] = newRow;
+             }
+
+            const yMaxLocal = d3.max(data, 
+                row => row[g_columnIndex]
+            )
+            maximums[i] =yMaxLocal;
+            print(`maximums ${maximums[i]}`)
+            print(`ymax local is ${yMaxLocal}`)
+    }
+
+    g_yMax = d3.max(maximums)
+    print(`global yMax is ${g_yMax}`)
+    print(`maximums are ${maximums[0]}`)
+    return g_yMax;
 }
 
 function loadGraph(graphName) {
